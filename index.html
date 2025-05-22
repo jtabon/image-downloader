@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Image Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body
+    class="bg-gray-900 text-white min-h-screen flex items-center justify-center px-4"
+  >
+    <div
+      class="w-full max-w-xl bg-gray-800 rounded-2xl shadow-2xl p-8 space-y-6"
+    >
+      <h1 class="text-3xl font-bold text-center text-white">
+        Web Image Downloader
+      </h1>
+      <p class="text-gray-400 text-center">
+        Paste a URL below to grab all images (.png, .webp, .jpeg, .gif) and
+        download them as a zip file.
+      </p>
+
+      <form id="grab-form" class="space-y-4">
+        <input
+          id="url-input"
+          type="url"
+          required
+          placeholder="https://example.com"
+          class="w-full px-4 py-3 rounded-xl bg-gray-700 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          type="submit"
+          class="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-xl font-semibold transition"
+        >
+          Grab Images
+        </button>
+      </form>
+
+      <div id="status" class="text-center text-gray-400 hidden">
+        Grabbing images... please wait ⏳
+      </div>
+    </div>
+
+    <script>
+      const form = document.getElementById('grab-form');
+      const input = document.getElementById('url-input');
+      const status = document.getElementById('status');
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const url = input.value.trim();
+        if (!url) return;
+
+        status.classList.remove('hidden');
+
+        try {
+          const response = await fetch('/grab', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url }),
+          });
+
+          if (!response.ok) throw new Error('Server error');
+
+          const blob = await response.blob();
+          const downloadUrl = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = 'images.zip';
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          window.URL.revokeObjectURL(downloadUrl);
+        } catch (err) {
+          alert('Failed to download images. Check the URL and try again.');
+          console.error(err);
+        } finally {
+          status.classList.add('hidden');
+        }
+      });
+    </script>
+  </body>
+</html>
